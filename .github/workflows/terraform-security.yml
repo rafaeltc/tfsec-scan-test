@@ -1,0 +1,51 @@
+name: Terraform Security Scan
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    - cron: '0 9 * * 1'  # Every Monday at 9 AM UTC
+
+jobs:
+  terraform-security:
+    name: Terraform Security Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write  # Required for SARIF upload
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run tfsec with SARIF output
+      uses: aquasecurity/tfsec-sarif-action@v0.1.4
+      with:
+        sarif_file: tfsec.sarif
+        working_directory: terraform/
+        additional_args: --minimum-severity HIGH
+
+    - name: Upload SARIF to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()  # Upload even if tfsec finds issues
+      with:
+        sarif_file: tfsec.sarif
+        category: tfsec
+
+    # - name: Run Trivy for additional checks
+    #   uses: aquasecurity/trivy-action@master
+    #   with:
+    #     scan-type: 'config'
+    #     scan-ref: 'terraform/'
+    #     format: 'sarif'
+    #     output: 'trivy.sarif'
+
+    # - name: Upload Trivy SARIF
+    #   uses: github/codeql-action/upload-sarif@v2
+    #   if: always()
+    #   with:
+    #     sarif_file: 'trivy.sarif'
+    #     category: trivy
