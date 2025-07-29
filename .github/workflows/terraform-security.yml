@@ -27,7 +27,7 @@ jobs:
       with:
         sarif_file: tfsec.sarif
         working_directory: terraform/
-        additional_args: --minimum-severity HIGH
+        args: --minimum-severity HIGH
 
     - name: Upload SARIF to GitHub Security tab
       uses: github/codeql-action/upload-sarif@v3
